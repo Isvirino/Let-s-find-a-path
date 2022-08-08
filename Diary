@@ -1,0 +1,7 @@
+# Let-s-find-a-path
+8/8/22
+version uploaded on 8/8/22 relies to heavily on calculations and doesn't approach cell and direction selection in a smart way.
+Need to exclude steps back and make sure the branches which end up in the same cell are killed off if slower. 
+Atm on step 7 allNodesS has around 250,000 entries meaning there's no chance a path would never be found. 
+
+Goal:Improve direction choice, start on the graphics once done with that
