@@ -1,0 +1,58 @@
+import java.util. ArrayList;
+public class Map {
+    private Cell[][] map;
+    private int[][] moves;
+
+    public Cell[][] getMap() {
+        return map;
+    }
+    public double getAltitude(int x, int y)
+    {
+        return map[x][y].getAltitude();
+    }
+
+    public void setMap(Cell[][] map) {
+        this.map = map;
+    }
+
+    public int[][] getMoves() {
+        return moves;
+    }
+
+    public void setMoves(int[][] moves) {
+        this.moves = moves;
+    }
+
+    public Map(int x, int y, boolean allowDiagonal) //TODO, currently assuming random heights, implement file reader
+    // direction is structured in the following manner
+            // NW, N, NE, E, SE, S, SW, W
+    {
+        map = new Cell[x][y];
+        for(int i = 0; i < map.length; i ++)
+        {
+            for(int b = 0; b < map[0].length; b++)
+            {
+                map[i][b] = new Cell(i,b,500 * Math.random());
+            }
+        }
+        ArrayList<Integer[]> movesAL = new ArrayList<Integer[]>();
+        movesAL.add(new Integer[]{1, 0});
+        movesAL.add(new Integer[]{0, 1});
+        movesAL.add(new Integer[]{-1, 0});
+        movesAL.add(new Integer[]{0, -1});
+        if(allowDiagonal)
+        {
+            movesAL.add(new Integer[]{1, 1});
+            movesAL.add(new Integer[]{-1, 1});
+            movesAL.add(new Integer[]{-1, -1});
+            movesAL.add(new Integer[]{1, -1});
+        }
+        moves = new int[movesAL.size()][2];
+        for(int i = 0; i < movesAL.size(); i++)
+        {
+            moves[i][0] = movesAL.get(i)[0];
+            moves[i][1] = movesAL.get(i)[1];
+        }
+
+    }
+}
