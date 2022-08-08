@@ -1,0 +1,26 @@
+public class MovementVariables {
+    private double walkingSpeed;
+    private double SlopeCoefficient;
+
+    public double getWalkingSpeed() {
+        return walkingSpeed;
+    }
+
+    public void setWalkingSpeed(double walkingSpeed) {
+        this.walkingSpeed = walkingSpeed;
+    }
+
+    public double getSlopeCoefficient() {
+        return SlopeCoefficient;
+    }
+
+    public void setSlopeCoefficient(double slopeCoefficient) {
+        SlopeCoefficient = slopeCoefficient;
+    }
+
+    public MovementVariables()
+    {
+        walkingSpeed = 1;
+        SlopeCoefficient = 1.1; // mulitplied by length of slope
+    }
+}
