@@ -5,3 +5,9 @@ Need to exclude steps back and make sure the branches which end up in the same c
 Atm on step 7 allNodesS has around 250,000 entries meaning there's no chance a path would never be found. 
 
 Goal:Improve direction choice, start on the graphics once done with that
+
+8/9/22
+Realized I completely forgot to implement the idea that branches which have kids can't have kids again, also stopped steps backwards. Ssome progress has been made but the 
+tipNodesS value still gets up to 200,000 after just a few rounds of calculations which means it is not getting cleared or there is some other underlying issue
+
+Goal: cut down on calculations by making sure the pathways leading to the same point dont both reproduce.
