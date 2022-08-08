@@ -1,0 +1,51 @@
+public class Cell {
+    private int[] coordinates;
+    private double altitude;
+    private boolean covered;
+
+
+    public Cell(int x, int y, double Height)
+    {
+        coordinates = new int[2];
+        coordinates[0] = x;
+        coordinates[1] = y;
+        altitude = Height;
+        covered = false;
+    }
+    public int[] getCoordinates() {
+        return coordinates;
+    }
+    public int getXCoordinate(){
+        return coordinates[0];
+    }
+    public int getYCoordinate(){
+        return coordinates[1];
+    }
+
+    public void setCoordinates(int[] coordinates) {
+        this.coordinates = coordinates;
+    }
+    public void setXCoordinate(int x) {
+        coordinates[1] = x;
+    }
+    public void setYCoordinate(int y) {
+        coordinates[2] = y;
+    }
+
+    public double getAltitude() {
+        return altitude;
+    }
+
+    public void setAltitude(double altitude) {
+        this.altitude = altitude;
+    }
+
+    public boolean isCovered() {
+        return covered;
+    }
+
+    public void setCovered(boolean covered) {
+        this.covered = covered;
+    }
+
+}
