@@ -1,0 +1,214 @@
+
+import java.util. ArrayList;
+public class nodeManager {
+    private static ArrayList<Cell> sameCells;
+    private Node start;
+    private Node finish;
+    private static ArrayList<Node> allNodesS;
+    private static ArrayList<int[]> allCoordinatesOfNodesS;//stores coordinates in the same order as the nodes
+    private static double lowestGoalScoreS;
+    private static ArrayList<Cell> secondToTipCellsS;
+    private static ArrayList<Node> tipNodesS; //nodes without children
+    private static ArrayList<Node> allNodesF;
+    private static ArrayList<int[]> allCoordinatesOfNodesF;//stores coordinates in the same order as the nodes
+    private static double lowestGoalScoreF;
+    private static ArrayList<Cell> secondToTipCellsF;
+    private static ArrayList<Node> tipNodesF;
+    private static ArrayList<Node[]> finishers;
+    private static Map map;
+    private static int GAV; //goalArrayValue
+    private static double finishGoalScore;
+    public static void main(String[] args)
+    {
+        new nodeManager();
+        while(sameCells.size() == 0 || lowestGoalScoreS + lowestGoalScoreF < finishGoalScore)
+        {
+            //generate moves for starting nodes and check for collisions between the groups
+            int lim = tipNodesS.size();
+            for(int i = 0; i < lim; i++)
+            {
+                Node w = tipNodesS.get(0);//working
+                int sN = w.getStepNum();
+                double t = w.getGoal(0);
+                double tHC = w.getGoal(1);
+                double tD = w.getGoal(2);
+                tipNodesS.remove(0);
+                Cell wc = w.getCurrentCell();// working cell
+                int[] co = wc.getCoordinates();
+                secondToTipCellsS.add(wc);
+                for(int m = 0; m < map.getMoves().length; m ++)
+                {
+                    int x2 = co[0] + map.getMoves()[m][0];
+                    int y2 = co[1] + map.getMoves()[m][1];
+                    if(checkIfWithinBounds(x2, y2))
+                    {
+                        addS(w.addChild(new Cell(x2, y2, map.getAltitude(x2,y2))));
+                        Node possibleImprovement =  w.getDirectChildren().get(w.getDirectChildren().size() - 1);
+                        checkForBenefitialCollisionS(x2, y2, possibleImprovement);
+                        if(possibleImprovement.getGoal(GAV) < lowestGoalScoreS)
+                            lowestGoalScoreS = possibleImprovement.getGoal(GAV);
+                    }
+                    if(sameCells.size() != 0 && w.getDirectChildren().get(m).getGoal(GAV) + lowestGoalScoreF > finishGoalScore)
+                        w.getDirectChildren().get(m).setHasChildren(true);
+
+                }
+            }
+            //generate moves for finishing nodes
+            lim = tipNodesF.size();
+            for(int i = 0; i < lim; i++)
+            {
+                Node w = tipNodesF.get(0);//working
+                int sN = w.getStepNum();
+                double t = w.getGoal(0);
+                double tHC = w.getGoal(1);
+                double tD = w.getGoal(2);
+                tipNodesF.remove(0);
+                Cell wc = w.getCurrentCell();// working cell
+                int[] co = wc.getCoordinates();
+                secondToTipCellsF.add(wc);
+                for(int m = 0; m < map.getMoves().length; m ++)
+                {
+                    int x2 = co[0] + map.getMoves()[m][0];
+                    int y2 = co[1] + map.getMoves()[m][1];
+                    if(checkIfWithinBounds(x2, y2))
+                    {
+                        if(!((new int[]{x2,y2}).equals(w.getPreviousCell()))) {
+                            addF(w.addChild(new Cell(x2, y2, map.getAltitude(x2, y2))));
+                            Node possibleImprovement = w.getDirectChildren().get(w.getDirectChildren().size() - 1);
+                            checkForBenefitialCollisionS(x2, y2, possibleImprovement);
+                            if (possibleImprovement.getGoal(GAV) < lowestGoalScoreF)
+                                lowestGoalScoreF = possibleImprovement.getGoal(GAV);
+                        }
+                    }
+                    if(sameCells.size() != 0 && w.getDirectChildren().get(m).getGoal(GAV) + lowestGoalScoreS > finishGoalScore)
+                        w.getDirectChildren().get(m).setHasChildren(true);
+                }
+            }
+            //check for collision within the groups
+            if(findSameCells())
+            {
+                int S = allCoordinatesOfNodesS.indexOf(sameCells.get(0).getCoordinates());
+                int F = allCoordinatesOfNodesF.indexOf(sameCells.get(0).getCoordinates());
+                finishers.add(new Node[]{allNodesS.get(S),allNodesF.get(F)});
+                double candidate = allNodesS.get(S).getGoal(GAV) + allNodesF.get(F).getGoal(GAV);
+                if(finishGoalScore == 0 || finishGoalScore > candidate)
+                finishGoalScore = candidate;
+            }
+            System.out.println(allNodesS.size());
+
+        }
+
+    }
+    public nodeManager()
+    {
+        GAV = 0;
+        int x = 16;
+        int y= 16;
+        boolean[] mo = {true, true, true, true, true, true, true, true};
+        map = new Map(x,y, true);
+        start = new Node(new Cell(0,0, map.getAltitude(0,0)), 0, 0 ,0 , 0, new int[]{0,0});
+        finish = new Node(new Cell(16,16, map.getAltitude(0,0)), 0, 0 ,0 , 0, new int[]{0,0});
+        tipNodesS = new ArrayList<Node>();
+        tipNodesF = new ArrayList<Node>();
+        allNodesS = new ArrayList<Node>();
+        allNodesF = new ArrayList<Node>();
+        allCoordinatesOfNodesS = new ArrayList<int[]>();
+        allCoordinatesOfNodesF = new ArrayList<int[]>();
+        secondToTipCellsS = new ArrayList<Cell>();
+        secondToTipCellsF = new ArrayList<Cell>();
+        sameCells = new ArrayList<Cell>();
+        addS(start);
+        addF(finish);
+        finishGoalScore = 0;
+    }
+    public static void addS(Node n)//add a new node to tip, all, and the cell arraylist for start branches
+    {
+        tipNodesS.add(n);
+        allNodesS.add(n);
+        allCoordinatesOfNodesS.add(n.getCurrentCell().getCoordinates());
+    }
+    public static void addF(Node n)//add a new node to tip, all, and the cell arraylist for finish branches
+    {
+        tipNodesF.add(n);
+        allNodesF.add(n);
+        allCoordinatesOfNodesF.add(n.getCurrentCell().getCoordinates());
+    }
+    public static boolean checkIfWithinBounds(int x, int y)
+    {
+        return x > 0 && x < map.getMap().length && y > 0 && y < map.getMap()[0].length;
+    }
+    public static void checkForBenefitialCollisionS(int x, int y, Node n)//receives the node being checked for viability
+    {
+        int[] coordinates = {x, y};
+        int check = allCoordinatesOfNodesS.indexOf(coordinates);
+        if(check != -1)
+        {
+            Node old = allNodesS.get(check);
+            if(n.getGoal(GAV) < old.getGoal(GAV))
+            {
+                n.addChildren(old.getDirectChildren());
+            }
+            else
+            {
+                tipNodesS.remove(tipNodesS.size() - 1);
+            }
+        }
+
+
+    }
+    public static void checkForBenefitialCollisionF(int x, int y, Node n)//receives the node being checked for viability
+    {
+        int[] coordinates = {x, y};
+        int check = allCoordinatesOfNodesF.indexOf(coordinates);
+        if(check != -1)
+        {
+            Node old = allNodesF.get(check);
+            if(n.getGoal(GAV) < old.getGoal(GAV))
+            {
+                n.addChildren(old.getDirectChildren());
+            }
+            else
+            {
+                tipNodesF.remove(tipNodesS.size() - 1);
+            }
+        }
+
+
+    }
+    public void transferChildren(Node n1, Node n2)//n2 is the worse pathway //todo delete
+    {
+        n1.addChildren(n2.getDirectChildren());
+        ArrayList<Node> toBeGrounded = n2.findAllTipChildren(n2);
+        for(int i = 0; i < toBeGrounded.size(); i++)
+        {
+            toBeGrounded.get(i).setHasChildren(true);
+        }
+        n1.updateChildren();
+        n1.setHasChildren(true);
+    }
+    public static boolean findSameCells()
+    {
+        ArrayList<Cell> secondToTipCellsSToBe = new ArrayList<Cell>();
+        for(int i = 0; i < tipNodesS.size(); i++)
+        {
+            secondToTipCellsSToBe.add(tipNodesS.get(i).getCurrentCell());
+        }
+        ArrayList<Cell> secondToTipCellsFToBe = new ArrayList<Cell>();
+        for(int i = 0; i < tipNodesF.size(); i++)
+        {
+            secondToTipCellsFToBe.add(tipNodesF.get(i).getCurrentCell());
+        }
+        secondToTipCellsS.addAll(secondToTipCellsSToBe);
+        secondToTipCellsF.addAll(secondToTipCellsFToBe);
+        secondToTipCellsS.retainAll(secondToTipCellsF);
+        secondToTipCellsF = secondToTipCellsFToBe;
+        if(secondToTipCellsS.size() != 0)
+        {
+            sameCells.addAll(secondToTipCellsS);
+            secondToTipCellsS = secondToTipCellsSToBe;
+            return true;//todo check if faster to return void and check size of sameCells every time;
+        }
+        secondToTipCellsS = secondToTipCellsSToBe;
+        return false;
+    }
+}
