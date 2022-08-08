@@ -1,0 +1,190 @@
+import java.util.ArrayList;
+
+public class Node {
+    private int[] previousCell;
+    private String name;
+    private double deltaT; //time
+    private double deltaH; //height
+    private double deltaD; //distance
+    //three above are changes from previous node to this node to allow changes of roots faster and more efficient
+    private int stepNum;
+    private double walkingSpeed;
+    private double slopeCoefficient;
+    private double goalArray[]; //time, totalHeightChange, totalDistance
+    private double time;
+    private double totalHeightChange;
+    private double totalDistance;
+    private double overallHeightChange;
+
+    private Cell currentCell;
+
+    private ArrayList<Node> directChildren;
+    private boolean hasChildren;
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getStepNum() {
+        return stepNum;
+    }
+
+    public void setStepNum(int stepNum) {
+        this.stepNum = stepNum;
+    }
+
+    public double getWalkingSpeed() {
+        return walkingSpeed;
+    }
+
+    public void setWalkingSpeed(double walkingSpeed) {
+        this.walkingSpeed = walkingSpeed;
+    }
+
+    public double getSlopeCoefficient() {
+        return slopeCoefficient;
+    }
+
+    public void setSlopeCoefficient(double slopeCoefficient) {
+        this.slopeCoefficient = slopeCoefficient;
+    }
+
+    public double getGoal(int goal) {
+        return goalArray[goal];
+    }
+
+    public void setGoal(double correction, int goal) {
+        goalArray[goal] = correction;
+    }
+
+
+
+    public double getOverallHeightChange() {
+        return overallHeightChange;
+    }
+
+    public void setOverallHeightChange(double overallHeightChange) {
+        this.overallHeightChange = overallHeightChange;
+    }
+
+
+
+    public Cell getCurrentCell() {
+        return currentCell;
+    }
+
+    public void setCurrentCell(Cell currentCell) {
+        this.currentCell = currentCell;
+    }
+
+    public ArrayList<Node> getDirectChildren() {
+        return directChildren;
+    }
+
+    public void setDirectChildren(ArrayList<Node> directChildren) {
+        this.directChildren = directChildren;
+    }
+
+    public boolean getHasChildren() {
+        return hasChildren;
+    }
+
+    public void setHasChildren(boolean hasChildren) {
+        this.hasChildren = hasChildren;
+    }
+
+
+    public Node()
+    {
+        directChildren = new ArrayList<Node>();
+        name = "0";
+        walkingSpeed = (new MovementVariables()).getWalkingSpeed();
+        slopeCoefficient = (new MovementVariables()).getSlopeCoefficient();
+        stepNum = 0;
+        goalArray[0] = 0;
+        goalArray[1] = 0;
+        overallHeightChange = 0;
+        goalArray[2] = 0;
+    }
+    public Node(Cell cc, int i, double t, double tHC, double tD, int[] previousCellCo)
+    {
+        previousCell = previousCellCo;
+        directChildren = new ArrayList<Node>();
+        name = "" + cc.getXCoordinate() + ", " + cc.getYCoordinate();
+        currentCell  = cc;
+        walkingSpeed = (new MovementVariables()).getWalkingSpeed();
+        slopeCoefficient = (new MovementVariables()).getSlopeCoefficient();
+        stepNum = i;
+        goalArray = new double[3];
+        goalArray[0] = t;
+        goalArray[1] = tHC;
+        goalArray[2] = tD;
+    }
+
+    public int[] getPreviousCell() {
+        return previousCell;
+    }
+
+    public Node addChild(Cell c)
+    {
+        double distance = Math.pow(Math.pow((currentCell.getAltitude() - c.getAltitude()) * slopeCoefficient,2) + Math.pow((currentCell.getXCoordinate() - c.getXCoordinate()),2) +
+                Math.pow(currentCell.getYCoordinate() - c.getYCoordinate(),2),0.5);
+        deltaD = distance;
+        deltaH = c.getAltitude() - currentCell.getAltitude();
+        deltaT = distance/walkingSpeed;
+        Node ret = new Node(c, stepNum + 1, distance/walkingSpeed,
+                goalArray[1] + Math.abs(currentCell.getAltitude() - c.getAltitude()), goalArray[2] + distance, currentCell.getCoordinates());
+        directChildren.add(ret);
+        hasChildren = true; // check for having children before the moves for loop
+        return ret;
+    }
+    public void addChildren(Node n)
+    {
+        directChildren.add(n);
+    }
+    public void addChildren(ArrayList<Node> n)
+    {
+        for(int i = 0; i < n.size(); i ++)
+        {
+            directChildren.add(n.get(i));
+        }
+        hasChildren = true;
+        updateChildren();
+    }
+    public ArrayList<Node> removeChildren(Node n)
+    {
+        ArrayList<Node> ret = n.getDirectChildren();
+        directChildren.remove(n);
+        return ret;
+    }
+    public ArrayList<Node> findAllTipChildren(Node n)
+    {
+        ArrayList<Node> ret = new ArrayList<Node>();
+        if(n.getDirectChildren().size() != 0)
+        {
+            for(int i = 0; i < n.getDirectChildren().size(); i++)
+            {
+                ret.addAll(findAllTipChildren(n.getDirectChildren().get(i)));
+            }
+        }
+        ret.add(n);
+        return ret;
+    }
+    public void updateChildren() //use on the node which received the children from the less efficient route
+    {
+        for(int i = 0; i < directChildren.size(); i++)
+        {
+            directChildren.get(i).updateValues(goalArray[0], goalArray[1], goalArray[2]);
+            directChildren.get(i).updateChildren();
+        }
+    }
+    public void updateValues(double t, double tHG, double tD)
+    {
+        goalArray[0] = t + deltaT;
+        goalArray[1] = tHG + deltaH;
+        goalArray[2] = tD + deltaD;
+    }
+}
